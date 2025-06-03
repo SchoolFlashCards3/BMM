@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SchoolFlashCards Book Mark Manager</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --hover-color: #f1f3f4;
+            --border-color: #dadce0;
+            --text-color: #202124;
+            --secondary-text: #5f6368;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+        }
+
+        .add-bookmark {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-bookmark:hover {
+            background-color: #3367d6;
+        }
+
+        .bookmarks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+        }
+
+        .bookmark-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: box-shadow 0.2s;
+            position: relative;
+            cursor: pointer;
+            height: 100px;
+            overflow: hidden;
+        }
+
+        .bookmark-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .bookmark-favicon {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .bookmark-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+        }
+
+        .bookmark-name {
+            font-size: 14px;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+        }
+
+        .bookmark-actions {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            z-index: 2;
+        }
+
+        .actions-btn {
+            background: none;
+            border: none;
+            color: var(--secondary-text);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .actions-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .actions-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+            width: 140px;
+            display: none;
+        }
+
+        .actions-menu.show {
+            display: block;
+        }
+
+        .action-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .action-item.delete-btn {
+            color: #d93025;
+        }
+
+        .action-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--secondary-text);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--secondary-text);
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-cancel {
+            background-color: white;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-cancel:hover {
+            background-color: var(--hover-color);
+        }
+
+        .btn-save {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .btn-save:hover {
+            background-color: #3367d6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--secondary-text);
+        }
+
+        .empty-state p {
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SchoolFlashCards Book Mark Manager</h1>
+            <button class="add-bookmark" id="addBookmarkBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add bookmark
+            </button>
+        </header>
+
+        <div class="bookmarks-grid" id="bookmarksGrid">
+            <!-- Bookmarks will be added here dynamically -->
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <h3>No bookmarks yet</h3>
+            <p>Click "Add bookmark" to get started</p>
+        </div>
+
+        <!-- Add/Edit Bookmark Modal -->
+        <div class="modal" id="bookmarkModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalTitle">Add Bookmark</h3>
+                    <button class="close-btn" id="closeModalBtn">&times;</button>
+                </div>
+                <form id="bookmarkForm">
+                    <input type="hidden" id="bookmarkId">
+                    <div class="form-group">
+                        <label for="bookmarkName">Name</label>
+                        <input type="text" id="bookmarkName" placeholder="Enter bookmark name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bookmarkUrl">URL</label>
+                        <input type="text" id="bookmarkUrl" placeholder="example.com or https://example.com" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-cancel" id="cancelBtn">Cancel</button>
+                        <button type="submit" class="btn btn-save">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const bookmarksGrid = document.getElementById('bookmarksGrid');
+            const emptyState = document.getElementById('emptyState');
+            const addBookmarkBtn = document.getElementById('addBookmarkBtn');
+            const bookmarkModal = document.getElementById('bookmarkModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const bookmarkForm = document.getElementById('bookmarkForm');
+            const modalTitle = document.getElementById('modalTitle');
+            const bookmarkNameInput = document.getElementById('bookmarkName');
+            const bookmarkUrlInput = document.getElementById('bookmarkUrl');
+            const bookmarkIdInput = document.getElementById('bookmarkId');
+
+            // State
+            let bookmarks = JSON.parse(localStorage.getItem('bookmarks')) || [];
+            let editingBookmarkId = null;
+
+            // Initialize
+            renderBookmarks();
+
+            // Event Listeners
+            addBookmarkBtn.addEventListener('click', openAddModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            bookmarkForm.addEventListener('submit', handleFormSubmit);
+
+            // Functions
+            function renderBookmarks() {
+                bookmarksGrid.innerHTML = '';
+                
+                if (bookmarks.length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                emptyState.style.display = 'none';
+                
+                bookmarks.forEach(bookmark => {
+                    const bookmarkCard = document.createElement('div');
+                    bookmarkCard.className = 'bookmark-card';
+                    bookmarkCard.dataset.id = bookmark.id;
+                    
+                    // Extract domain for favicon
+                    let domain;
+                    try {
+                        const url = new URL(bookmark.url);
+                        domain = url.hostname;
+                    } catch (e) {
+                        domain = 'default';
+                    }
+                    
+                    const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}`;
+                    
+                    // Shorten URL for display
+                    let displayUrl = bookmark.url;
+                    try {
+                        const urlObj = new URL(bookmark.url);
+                        displayUrl = urlObj.hostname + urlObj.pathname;
+                        if (displayUrl.length > 30) {
+                            displayUrl = displayUrl.substring(0, 27) + '...';
+                        }
+                    } catch (e) {
+                        if (displayUrl.length > 30) {
+                            displayUrl = displayUrl.substring(0, 27) + '...';
+                        }
+                    }
+                    
+                    bookmarkCard.innerHTML = `
+                        <div class="bookmark-name" title="${bookmark.name}">${bookmark.name}</div>
+                        <a href="${bookmark.url}" target="_blank" class="bookmark-link" title="${bookmark.url}">
+                            <img src="${faviconUrl}" class="bookmark-favicon" onerror="this.style.display='none'">
+                            ${displayUrl}
+                        </a>
+                        <div class="bookmark-actions">
+                            <button class="actions-btn">⋮</button>
+                            <div class="actions-menu">
+                                <div class="action-item edit-btn">Edit</div>
+                                <div class="action-item delete-btn">Delete</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    bookmarksGrid.appendChild(bookmarkCard);
+                    
+                    // Make entire card clickable
+                    bookmarkCard.addEventListener('click', function(e) {
+                        // Don't navigate if clicking on the actions button or menu
+                        if (e.target.closest('.bookmark-actions')) {
+                            return;
+                        }
+                        window.open(bookmark.url, '_blank');
+                    });
+                    
+                    // Add event listeners for the action menu
+                    const actionsBtn = bookmarkCard.querySelector('.actions-btn');
+                    const actionsMenu = bookmarkCard.querySelector('.actions-menu');
+                    const editBtn = bookmarkCard.querySelector('.edit-btn');
+                    const deleteBtn = bookmarkCard.querySelector('.delete-btn');
+                    
+                    actionsBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Close all other open menus first
+                        document.querySelectorAll('.actions-menu').forEach(menu => {
+                            if (menu !== actionsMenu) menu.classList.remove('show');
+                        });
+                        actionsMenu.classList.toggle('show');
+                    });
+                    
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openEditModal(bookmark.id);
+                        actionsMenu.classList.remove('show');
+                    });
+                    
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteBookmark(bookmark.id);
+                        actionsMenu.classList.remove('show');
+                    });
+                });
+                
+                // Close menus when clicking elsewhere
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.actions-btn')) {
+                        document.querySelectorAll('.actions-menu').forEach(menu => {
+                            menu.classList.remove('show');
+                        });
+                    }
+                });
+            }
+            
+            function openAddModal() {
+                editingBookmarkId = null;
+                modalTitle.textContent = 'Add Bookmark';
+                bookmarkForm.reset();
+                bookmarkModal.classList.add('show');
+            }
+            
+            function openEditModal(id) {
+                const bookmark = bookmarks.find(b => b.id === id);
+                if (!bookmark) return;
+                
+                editingBookmarkId = id;
+                modalTitle.textContent = 'Edit Bookmark';
+                bookmarkNameInput.value = bookmark.name;
+                bookmarkUrlInput.value = bookmark.url;
+                bookmarkIdInput.value = id;
+                bookmarkModal.classList.add('show');
+            }
+            
+            function closeModal() {
+                bookmarkModal.classList.remove('show');
+            }
+            
+            function validateAndFormatUrl(url) {
+                // Trim whitespace
+                url = url.trim();
+                
+                // If empty, return as is (form validation will catch it)
+                if (!url) return url;
+                
+                // Check if it already has http:// or https://
+                if (!/^https?:\/\//i.test(url)) {
+                    // Check if it starts with www.
+                    if (/^www\./i.test(url)) {
+                        return 'https://' + url;
+                    }
+                    // Otherwise assume it's a domain without www
+                    return 'https://' + url;
+                }
+                
+                // If it already has a protocol, return as is
+                return url;
+            }
+            
+            function handleFormSubmit(e) {
+                e.preventDefault();
+                
+                const name = bookmarkNameInput.value.trim();
+                let url = bookmarkUrlInput.value.trim();
+                
+                // Validate and format URL
+                url = validateAndFormatUrl(url);
+                
+                // Basic URL format validation
+                try {
+                    // This will throw if URL is invalid
+                    new URL(url);
+                } catch (e) {
+                    alert('Please enter a valid URL (e.g., example.com or https://example.com)');
+                    return;
+                }
+                
+                if (editingBookmarkId) {
+                    // Update existing bookmark
+                    const index = bookmarks.findIndex(b => b.id === editingBookmarkId);
+                    if (index !== -1) {
+                        bookmarks[index] = {
+                            ...bookmarks[index],
+                            name,
+                            url
+                        };
+                    }
+                } else {
+                    // Add new bookmark
+                    const newBookmark = {
+                        id: Date.now().toString(),
+                        name,
+                        url
+                    };
+                    bookmarks.push(newBookmark);
+                }
+                
+                saveBookmarks();
+                renderBookmarks();
+                closeModal();
+            }
+            
+            function deleteBookmark(id) {
+                bookmarks = bookmarks.filter(bookmark => bookmark.id !== id);
+                saveBookmarks();
+                renderBookmarks();
+            }
+            
+            function saveBookmarks() {
+                localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+            }
+        });
+    </script>
+</body>
+</html>
