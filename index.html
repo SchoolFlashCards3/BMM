@@ -396,10 +396,10 @@
                     
                     bookmarkCard.innerHTML = `
                         <div class="bookmark-name" title="${bookmark.name}">${bookmark.name}</div>
-                        <a href="${bookmark.url}" target="_blank" class="bookmark-link" title="${bookmark.url}">
+                        <span class="bookmark-link" title="${bookmark.url}">
                             <img src="${faviconUrl}" class="bookmark-favicon" onerror="this.style.display='none'">
                             ${displayUrl}
-                        </a>
+                        </span>
                         <div class="bookmark-actions">
                             <button class="actions-btn">⋮</button>
                             <div class="actions-menu">
@@ -411,13 +411,13 @@
                     
                     bookmarksGrid.appendChild(bookmarkCard);
                     
-                    // Make entire card clickable
+                    // Make entire card clickable (opens in same tab)
                     bookmarkCard.addEventListener('click', function(e) {
                         // Don't navigate if clicking on the actions button or menu
                         if (e.target.closest('.bookmark-actions')) {
                             return;
                         }
-                        window.open(bookmark.url, '_blank');
+                        window.location.href = bookmark.url;
                     });
                     
                     // Add event listeners for the action menu
